@@ -1,0 +1,24 @@
+!----------------------
+! mandatory
+!----------------------
+PREFIX   = BiTeI
+
+NKX      = 10
+NKY      = 10
+NKZ      = 10
+
+NBMIN    = 13
+NBMAX    = 13
+!----------------------
+! optional
+!----------------------
+KX_OFFSET= 0D0
+KY_OFFSET= 0D0
+KZ_OFFSET= 0.5D0  ! interested at A point
+
+KX_FRAC= 0.0625D0
+KY_FRAC= 0.0625D0
+KZ_FRAC= 0.5D0
+
+PLOT_VELOC= .FALSE.
+PLOT_MAGNET= .FALSE.
