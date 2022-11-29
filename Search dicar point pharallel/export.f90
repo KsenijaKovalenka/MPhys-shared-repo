@@ -1,5 +1,5 @@
     subroutine export_data
-    use parameters, only:: gap, npartitions
+    use parameters, only: gap, npartitions
     implicit none 
     integer ipart
     open(777, file='gap.dat')

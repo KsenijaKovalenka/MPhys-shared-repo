@@ -3,17 +3,18 @@
 !	INCLUDE 'mpif.h'
 !   MPI varibales
 	INTEGER IERR,MYID,NUMPROCS
-!   input file units
-	INTEGER IUH, INNKP,IIN
+!   input file units 
+	INTEGER IUH, IUH_TRIVIAL, IUH_TOPOLOGICAL, INNKP, IIN
 !   k-points & bands
 	INTEGER NBAND,NKX,NKY,NKZ,NKPT,NBMIN,NBMAX
-	REAL*8  KX_FRAC,KY_FRAC,KZ_FRAC
-	REAL*8  KX_OFFSET,KY_OFFSET,KZ_OFFSET
+	REAL*8  KX_HBOX,KY_HBOX,KZ_HBOX
+	REAL*8  KX_ORIGIN,KY_ORIGIN,KZ_ORIGIN
 !   real-space sampling
 	INTEGER NRPTS
-	INTEGER,ALLOCATABLE::NDEG(:),IRVEC(:,:)
+	INTEGER,ALLOCATABLE::NDEG(:),RVEC(:,:)
 !   real-space hamiltonian
-	COMPLEX*16,ALLOCATABLE::HAMR(:,:,:)
+   !need either two distinct or nothing
+!	COMPLEX*16,ALLOCATABLE::HAMR(:,:,:)
 !   Fermi level
 	REAL*8 EFERMI
 !   lattice parameters
@@ -33,10 +34,10 @@
         SUBROUTINE INIT_PARAM
         USE CONSTANT          ,          ONLY: PI2
         USE PARAMETERS         ,          ONLY:  IERR,MYID,NUMPROCS,IIN,             &
-                                                 IUH,INNKP,PREFIX,NBAND,NRPTS,       &
+                                                 IUH,INNKP,PREFIX,NBAND,NRPTS, &
                                                  NKX,NKY,NKZ,NKPT,NBMIN,NBMAX,       &
-                                                 KX_FRAC,KY_FRAC,KZ_FRAC,            &
-                                                 KX_OFFSET,KY_OFFSET,KZ_OFFSET,      &
+                                                 KX_HBOX,KY_HBOX,KZ_HBOX,            &
+                                                 KX_ORIGIN,KY_ORIGIN,KZ_ORIGIN,      &
                                                  EIGEN,IKMAP,PLOT_VELOC,PLOT_MAGNET
         IMPLICIT NONE
         INCLUDE 'mpif.h'
@@ -59,7 +60,7 @@
         CALL GETPARAM(TOKEN,VALUE,IIN)
 	
         PREFIX=TRIM(ADJUSTL(VALUE))
-        WRITE(LINE,'(2A)')TRIM(ADJUSTL(PREFIX)),'_hr.dat'
+        WRITE(LINE,'(2A)')TRIM(ADJUSTL(PREFIX)),'_hr_trivial.dat'
         INQUIRE(FILE=TRIM(ADJUSTL(LINE)),EXIST=CASE_HR)
         IF(.NOT.CASE_HR) GO TO 150
         WRITE(NNKPLINE,'(2A)')TRIM(ADJUSTL(PREFIX)),'.nnkp'
@@ -114,7 +115,7 @@
 !============================================================
 !  READ OPTIONAL PARAMETERS
 !============================================================
-! 1. read k-offsets
+! 1. read k-oorigin
         TOKEN='KX_OFFSET'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
@@ -144,33 +145,33 @@
         ELSE
            KZ_OFFSET=0D0
         ENDIF
-! 2. read k fractions
+! 2. read k-box half sizes
  
-        TOKEN='KX_FRAC'
+        TOKEN='KX_HBOX'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
 	
-           READ(VALUE,*,ERR=162) KX_FRAC
+           READ(VALUE,*,ERR=162) KX_HBOX
         ELSE
-           KX_FRAC=0D0
+           KX_HBOX=0D0
         ENDIF
 
-        TOKEN='KY_FRAC'
+        TOKEN='KY_HBOX'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
 	
-           READ(VALUE,*,ERR=163) KY_FRAC
+           READ(VALUE,*,ERR=163) KY_HBOX
         ELSE
-           KY_FRAC=0D0
+           KY_HBOX=0D0
         ENDIF
 
-        TOKEN='KZ_FRAC'
+        TOKEN='KZ_HBOX'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
 	
-           READ(VALUE,*,ERR=164) KZ_FRAC
+           READ(VALUE,*,ERR=164) KZ_HBOX
         ELSE
-           KZ_FRAC=0D0
+           KZ_HBOX=0D0
         ENDIF
 ! 3. read control keys plot_veloc and plot_magnet
         TOKEN='PLOT_VELOC'
@@ -305,7 +306,7 @@
  162    IF(MYID.eq.0) THEN
           WRITE(*,'(A,/,A,/,A,/,A)') &
           '-----------------------------------------------', &
-          '          FATAL ERROR: INVALID KX_FRAC.  ',         &
+          '          FATAL ERROR: INVALID KX_HBOX.  ',         &
           '                 PROGRAM ABORTED               ', &
           '-----------------------------------------------'
         ENDIF
@@ -313,7 +314,7 @@
  163    IF(MYID.eq.0) THEN
           WRITE(*,'(A,/,A,/,A,/,A)') &
           '-----------------------------------------------', &
-          '          FATAL ERROR: INVALID KY_FRAC.  ',         &
+          '          FATAL ERROR: INVALID KY_HBOX.  ',         &
           '                 PROGRAM ABORTED               ', &
           '-----------------------------------------------'
         ENDIF
@@ -321,7 +322,7 @@
  164    IF(MYID.eq.0) THEN
           WRITE(*,'(A,/,A,/,A,/,A)') &
           '-----------------------------------------------', &
-          '          FATAL ERROR: INVALID KZ_FRAC.  ',         &
+          '          FATAL ERROR: INVALID KZ_HBOX.  ',         &
           '                 PROGRAM ABORTED               ', &
           '-----------------------------------------------'
         ENDIF

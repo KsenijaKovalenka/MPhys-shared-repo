@@ -12,13 +12,13 @@ NBMAX    = 13
 !----------------------
 ! optional
 !----------------------
-KX_OFFSET= 0D0
-KY_OFFSET= 0D0
-KZ_OFFSET= 0.5D0  ! interested at A point
+KX_ORIGIN= 0.0166667
+KY_ORIGIN= 0.0166667
+KZ_ORIGIN= 0.5D0  ! interested at around A point
 
-KX_FRAC= 0.0625D0
-KY_FRAC= 0.0625D0
-KZ_FRAC= 0.5D0
+KX_HBOX= 0.1D0
+KY_HBOX= 0.1D0
+KZ_HBOX= 0.1D0
 
-PLOT_VELOC= .FALSE.
-PLOT_MAGNET= .FALSE.
+!PLOT_VELOC= .FALSE.
+!PLOT_MAGNET= .FALSE.

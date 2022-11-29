@@ -1,5 +1,5 @@
     program diracfinder
-    use constants, only :: twopi
+    use constants, only : twopi
     use parameters 
     implicit NONE
     call init_mpi(ierr)
