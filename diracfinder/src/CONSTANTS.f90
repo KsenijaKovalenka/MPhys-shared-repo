@@ -5,7 +5,7 @@ MODULE CONSTANTS
         SUBROUTINE INIT_CONSTANTS
         USE CONSTANTS
         IMPLICIT NONE
-        INCLUDE ‘mpif.h’
+        !INCLUDE ‘mpif.h’
          KBOLTZ = 8.617D-5
          PI     = 4.0D0*ATAN(1.0D0)
          TWOPI    = PI*2D0

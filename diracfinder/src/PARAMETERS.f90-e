@@ -6,9 +6,9 @@
 !   input file units 
 	INTEGER IUH, IUH_TRIVIAL, IUH_TOPOLOGICAL, INNKP, IIN
 !   k-points & bands
-	INTEGER NBAND,NKX,NKY,NKZ,NKPT,NBMIN,NBMAX
+	INTEGER NBAND,NKX,NKY,NKZ,NKPT,NVALENCE,NCONDUCTION,NPARTITIONS
 	REAL*8  KX_HBOX,KY_HBOX,KZ_HBOX
-	REAL*8  KX_ORIGIN,KY_ORIGIN,KZ_ORIGIN
+	REAL*8  K1_ORIGIN,K2_ORIGIN,K3_ORIGIN
 !   real-space sampling
 	INTEGER NRPTS
 	INTEGER,ALLOCATABLE::NDEG(:),RVEC(:,:)
@@ -32,12 +32,13 @@
 ! initialization
 !============================================================
         SUBROUTINE INIT_PARAM
-        USE CONSTANT          ,          ONLY: PI2
+        USE CONSTANTS          ,          ONLY: TWOPI
         USE PARAMETERS         ,          ONLY:  IERR,MYID,NUMPROCS,IIN,             &
-                                                 IUH,INNKP,PREFIX,NBAND,NRPTS, &
-                                                 NKX,NKY,NKZ,NKPT,NBMIN,NBMAX,       &
+                                                 IUH,INNKP,PREFIX,NBAND,NRPTS,       &
+                                                 NKX,NKY,NKZ,NKPT,                   &
+                                                 NVALENCE,NCONDUCTION,NPARTITIONS,   &
                                                  KX_HBOX,KY_HBOX,KZ_HBOX,            &
-                                                 KX_ORIGIN,KY_ORIGIN,KZ_ORIGIN,      &
+                                                 K1_ORIGIN,K2_ORIGIN,K3_ORIGIN,      &
                                                  EIGEN,IKMAP,PLOT_VELOC,PLOT_MAGNET
         IMPLICIT NONE
         INCLUDE 'mpif.h'
@@ -92,58 +93,68 @@
         ELSE
            GO TO 156
         ENDIF
-! 3. read NBMIN and NBMAX
-        TOKEN='NBMIN'
+! 3. read NVALENCE and NCONDUCTION
+        TOKEN='NVALENCE'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
-           READ(VALUE,*,ERR=157) NBMIN
+           READ(VALUE,*,ERR=157) NVALENCE
 	
         ELSE
            GO TO 157
         ENDIF
 
-        TOKEN='NBMAX'
+        TOKEN='NCONDUCTION'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
-           READ(VALUE,*,ERR=158) NBMAX
+           READ(VALUE,*,ERR=158) NCONDUCTION
 	
         ELSE
            GO TO 158
         ENDIF
+
+        TOKEN='NPARTITIONS'
+        CALL GETPARAM(TOKEN,VALUE,IIN)
+        IF(LEN_TRIM(VALUE).NE.0) THEN
+           READ(VALUE,*,ERR=1158) NPARTITIONS
+	
+        ELSE
+           NPARTITIONS=2D0
+        ENDIF
+
         NKPT=(2*NKX+1)*(2*NKY+1)*(2*NKZ+1)
         ALLOCATE(IKMAP(-NKX:NKX,-NKY:NKY,-NKZ:NKZ))
 !============================================================
 !  READ OPTIONAL PARAMETERS
 !============================================================
 ! 1. read k-oorigin
-        TOKEN='KX_OFFSET'
+        TOKEN='K1_ORIGIN'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
-           READ(VALUE,*,ERR=159) KX_OFFSET
-           KX_OFFSET=KX_OFFSET*PI2
+           READ(VALUE,*,ERR=159) K1_ORIGIN
+           K1_ORIGIN=K1_ORIGIN*TWOPI
 	
         ELSE
-           KX_OFFSET=0D0
+           K1_ORIGIN=0D0
         ENDIF
 
-        TOKEN='KY_OFFSET'
+        TOKEN='K2_ORIGIN'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
-           READ(VALUE,*,ERR=160) KY_OFFSET
-           KY_OFFSET=KY_OFFSET*PI2
+           READ(VALUE,*,ERR=160) K2_ORIGIN
+           K2_ORIGIN=K2_ORIGIN*TWOPI
 	
         ELSE
-           KY_OFFSET=0D0
+           K2_ORIGIN=0D0
         ENDIF
 
-        TOKEN='KZ_OFFSET'
+        TOKEN='K3_ORIGIN'
         CALL GETPARAM(TOKEN,VALUE,IIN)
         IF(LEN_TRIM(VALUE).NE.0) THEN
-           READ(VALUE,*,ERR=161) KZ_OFFSET
-           KZ_OFFSET=KZ_OFFSET*PI2
+           READ(VALUE,*,ERR=161) K3_ORIGIN
+           K3_ORIGIN=K3_ORIGIN*TWOPI
 	
         ELSE
-           KZ_OFFSET=0D0
+           K3_ORIGIN=0D0
         ENDIF
 ! 2. read k-box half sizes
  
@@ -266,7 +277,7 @@
  157    IF(MYID.eq.0) THEN
           WRITE(*,'(A,/,A,/,A,/,A)') &
           '-----------------------------------------------', &
-          '           FATAL ERROR: INVALID NBMIN.  ',         &
+          '           FATAL ERROR: INVALID NVALENCE.  ',         &
           '                 PROGRAM ABORTED               ', &
           '-----------------------------------------------'
         ENDIF
@@ -274,15 +285,23 @@
  158    IF(MYID.eq.0) THEN
           WRITE(*,'(A,/,A,/,A,/,A)') &
           '-----------------------------------------------', &
-          '           FATAL ERROR: INVALID NBMAX.  ',         &
+          '           FATAL ERROR: INVALID NCONDUCTION.  ',         &
           '                 PROGRAM ABORTED               ', &
           '-----------------------------------------------'
         ENDIF
         STOP
+1158    IF(MYID.eq.0) THEN
+         WRITE(*,'(A,/,A,/,A,/,A)') &
+         '-----------------------------------------------', &
+         '           FATAL ERROR: INVALID NPARTITIONS.  ',         &
+         '                 PROGRAM ABORTED               ', &
+         '-----------------------------------------------'
+       ENDIF
+       STOP       
  159    IF(MYID.eq.0) THEN
           WRITE(*,'(A,/,A,/,A,/,A)') &
           '-----------------------------------------------', &
-          '         FATAL ERROR: INVALID KX_OFFSET.  ',         &
+          '         FATAL ERROR: INVALID K1_ORIGIN.  ',         &
           '                 PROGRAM ABORTED               ', &
           '-----------------------------------------------'
         ENDIF
@@ -290,7 +309,7 @@
  160    IF(MYID.eq.0) THEN
           WRITE(*,'(A,/,A,/,A,/,A)') &
           '-----------------------------------------------', &
-          '         FATAL ERROR: INVALID KY_OFFSET.  ',         &
+          '         FATAL ERROR: INVALID K2_ORIGIN.  ',         &
           '                 PROGRAM ABORTED               ', &
           '-----------------------------------------------'
         ENDIF
@@ -298,7 +317,7 @@
  161    IF(MYID.eq.0) THEN
           WRITE(*,'(A,/,A,/,A,/,A)') &
           '-----------------------------------------------', &
-          '         FATAL ERROR: INVALID KZ_OFFSET.  ',         &
+          '         FATAL ERROR: INVALID K3_ORIGIN.  ',         &
           '                 PROGRAM ABORTED               ', &
           '-----------------------------------------------'
         ENDIF

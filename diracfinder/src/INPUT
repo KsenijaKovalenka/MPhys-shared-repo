@@ -7,8 +7,10 @@ NKX      = 10
 NKY      = 10
 NKZ      = 10
 
-NBMIN    = 13
-NBMAX    = 13
+NVALENCE      = 12
+NCONDUCTION   = 13
+
+NPARTITIONS   = 10
 !----------------------
 ! optional
 !----------------------
